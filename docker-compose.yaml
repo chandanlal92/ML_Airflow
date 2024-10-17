@@ -1,0 +1,72 @@
+version: '3'
+
+
+
+services:
+
+  mlmodeldocker:
+
+    image: mlmodeldocker:latest
+    
+    environment:
+      - LOAD_EX=n
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - Model_S3_Bucket_name=${Model_S3_Bucket_name}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - Data_prefix=${Data_prefix}
+      - sns_topic_arn=${sns_topic_arn}
+      - Data_S3_Bucket_name=${Data_S3_Bucket_name}
+      - Data_filename=${Data_filename}
+
+    volumes:
+
+      - ./airflow:/opt/airflow
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+      - ./app:/app
+
+    env_file:
+      - .env  # Load AWS credentials from .env file
+    ports:
+
+      - "8080:8080"
+      
+    networks:
+      - airflow_network
+    depends_on:
+      - fastapi
+    command: airflow standalone
+
+  fastapi:
+      
+    build: 
+      context: ./fastapi  # Reference to the FastAPI Dockerfile
+    container_name: fastapi_app
+
+    environment:
+      - LOAD_EX=n
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - Model_S3_Bucket_name=${Model_S3_Bucket_name}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - Data_prefix=${Data_prefix}
+      - sns_topic_arn=${sns_topic_arn}
+
+    volumes:
+      - ./fastapi:/app  # This points to where your FastAPI app code lives
+      - ./fastapi/.env:/app/.env
+    env_file:
+      - .env  # Load AWS credentials from .env file
+    ports:
+      - "8000:8000"
+    networks:
+      - airflow_network
+    restart: always
+
+
+  
+networks:
+  airflow_network:
+    driver: bridge
+    
