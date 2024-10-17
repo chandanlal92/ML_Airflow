@@ -28,7 +28,7 @@ Here’s the folder structure of the project:
 1. **Clone the repository**:
 
    ```bash
-   git clone github.com/chandanlal92
+   git clone github.com/chandanlal92/ML_Airflow
    cd ML_Airflow
 
 2. Create a .env file:
